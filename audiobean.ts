@@ -30,6 +30,21 @@ class BeanSound {
         return this.src;
     }
 
+    /**
+     HAVE_NOTHING 	    0 	No information is available about the media resource.
+     HAVE_METADATA 	    1 	Enough of the media resource has been retrieved that the metadata attributes are initialized. Seeking will no longer raise an exception.
+     HAVE_CURRENT_DATA 	2 	Data is available for the current playback position, but not enough to actually play more than one frame.
+     HAVE_FUTURE_DATA 	3 	Data for the current playback position as well as for at least a little bit of time into the future is available (in other words, at least two frames of video, for example).
+     HAVE_ENOUGH_DATA 	4 	Enough data is available—and the download rate is high enough—that the media can be played through to the end without interruption.
+     */
+    public isReady():boolean {
+        return this.audio.readyState >= 2;
+    }
+
+    /**
+     *
+     * @returns {boolean} member get re-setted in load method
+     */
     public canPlayResource(): boolean {
         return this._canPlayResource;
     }
@@ -118,7 +133,6 @@ class BeanSound {
 class BeanSoundPlayerControls {
 
     protected beanSound: BeanSound;
-    protected options;
 
     constructor(beanSound) {
 
@@ -138,6 +152,7 @@ class BeanSoundPlayerControls {
     }
 
     play(): void {
+        if (this.onPlay) this.onPlay();
         this.beanSound.play();
     }
 
@@ -153,6 +168,31 @@ class BeanSoundPlayerControls {
 
 
 class BeanPlayer extends BeanSoundPlayerControls {
+
+    private _progressSelector: string = "";
+    private _bufferedProgressSelector: string = "";
+
+    private _list;
+
+    protected progessElem;
+    protected bufferedProgessElem;
+
+    private _toggleTextPlay: string = "&#9658;";
+    private _toggleTextPause: string = "&#9646;";
+    private _toggleTextSelector: string = "";
+    private _toggleClickSelector: string = "";
+    private _stopSelector: string = "";
+    private _playSelector: string = "";
+    private _sliderSelector: string = "";
+    private _imgSelector: string = "";
+    private _imgSrc:string = "";
+    // necessary?
+    private _toggleButtonSelector: string = "";
+
+    constructor(beanSound) {
+        super(beanSound);
+    }
+
     getList() {
         return this._list;
     }
@@ -161,6 +201,17 @@ class BeanPlayer extends BeanSoundPlayerControls {
         this._list = value;
         return this;
     }
+
+    setImage(value: string) : BeanPlayer {
+        this._imgSrc = value;
+        return this;
+    }
+
+    setImageSelector(value: string) : BeanPlayer {
+        this._imgSelector = value;
+        return this;
+    }
+
 
     getStopSelector() : string {
         return this._stopSelector;
@@ -213,29 +264,6 @@ class BeanPlayer extends BeanSoundPlayerControls {
     setToggleTextSelector(value: string) : BeanPlayer {
         this._toggleTextSelector = value;
         return this;
-    }
-
-    private _progressSelector: string = "";
-    private _bufferedProgressSelector: string = "";
-
-    private _list;
-
-    protected progessElem;
-    protected bufferedProgessElem;
-
-    private _toggleTextPlay: string = "&#9658;";
-    private _toggleTextPause: string = "&#9646;";
-    private _toggleTextSelector: string = ""; // idTextToggle
-    private _toggleClickSelector: string = ""; // idToggle
-    private _toggleButtonSelector: string = "";// idButtonToggle
-    private _stopSelector: string = "";// idStop
-    private _playSelector: string = "";// idPlay
-    private _sliderSelector: string = "";
-    private _imgSelector: string = "";
-    private _imgSrc:string = "";
-
-    constructor(beanSound) {
-        super(beanSound);
     }
 
     public setup() {
@@ -294,10 +322,11 @@ class BeanPlayer extends BeanSoundPlayerControls {
             }, false);
 
             this.progessElem.addEventListener("click", (event) => {
+                if (!this.beanSound.isReady()) return;
                 // if (!this.beanSound.isSeekable()) return;
                 // console.log(this.progessElem.style.width);
-                this.beanSound.audio.currentTime = parseInt(event.clientX);
-                this.updateProgress();
+                // this.beanSound.audio.currentTime = parseInt(event.clientX);
+                // this.updateProgress();
             }, false);
 
 
@@ -337,20 +366,34 @@ class BeanPlayer extends BeanSoundPlayerControls {
         }
         if (this._playSelector !== "") {
             e(this._playSelector).addEventListener("click", () => {
-                this.onPlay();
                 this.play();
             }, false);
         }
     }
 
-    onPlay():void {
+    /**
+     * ui update hook
+     */
+    protected onPlay():void {
+
         if (this._imgSelector !== "" && this._imgSrc !== "" ) {
             e(this._imgSelector).src = this._imgSrc;
         }
+
     }
 }
 
 class BeanListPlayer {
+
+    getLoopMode(): number {
+        return this._loopMode;
+    }
+
+    setLoopMode(value: number): BeanListPlayer {
+        this._loopMode = value;
+        return this;
+    }
+
     getToggleTextSelector(): string {
         return this._toggleTextSelector;
     }
@@ -396,17 +439,17 @@ class BeanListPlayer {
         return this;
     }
 
+
     public static readonly LOOP_NONE = 0;
     public static readonly LOOP_LIST = 1;
-    public static readonly LOOP_TRACK = 2;
+    // public static readonly LOOP_TRACK = 2;
 
     public sounds = [];
-
+    protected curIndex = 0;
     protected highlightClass: string = "track-highlight";
     protected highlightIndex: number = 0;
-    private curIndex = 0;
-    private _loopmode = 0;
 
+    private _loopMode:number = 0;
     private _toggleTextPlay: string = "&#9658;";
     private _toggleTextPause: string = "&#9646;";
     private _toggleTextSelector: string = ""; // idTextToggle
@@ -416,9 +459,12 @@ class BeanListPlayer {
     private _prevButtonSelector: string = "";// idPrev
 
 
-    constructor(playlist) {
+    constructor(playlist, loopmode) {
         if (typeof playlist === "string") {
             this.setSoundsByName(playlist);
+        }
+        if (typeof loopmode !== "undefined") {
+            this.setLoopMode(loopmode);
         }
     }
 
@@ -434,6 +480,14 @@ class BeanListPlayer {
                 beanSoundId = "#" + beanSoundId;
             }
             let beanplayer = new BeanPlayer(new BeanSound(playlistItem.getAttribute("data-sound")));
+
+            let imgSrc = playlistItem.getAttribute("data-image");
+            if (imgSrc) {
+                beanplayer.setImage(imgSrc);
+                // auto (#$playlist-image) or use setter?
+                beanplayer.setImageSelector("#" + playlist + "-img");
+                // console.log("setImageSelector #" + playlist + "-img");
+            }
 
             beanplayer.setToggleClickSelector(beanSoundId)
                 .setList(this)
@@ -508,10 +562,13 @@ class BeanListPlayer {
             this.removeHighlightItem();
             this.curIndex = 0;
 
-            if (this._loopmode === BeanListPlayer.LOOP_NONE) {
+            if (this._loopMode === BeanListPlayer.LOOP_NONE) {
                 if (this._toggleTextSelector !== "") {
                     e(this._toggleTextSelector).innerHTML = this._toggleTextPlay;
                 }
+            } else if (this._loopMode === BeanListPlayer.LOOP_LIST) {
+                this.sounds[this.curIndex].play();
+                this.highlightItem();
             }
 
         }

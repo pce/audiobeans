@@ -1,0 +1,153 @@
+/* playlist */
+
+ol.playlist, ul.playlist {
+    list-style: none;
+    padding: 0px;
+}
+
+.playlist li {
+    cursor:pointer;
+    display:block;
+    margin:0;
+    padding:1em 0;
+}
+
+.playlist li:hover {
+    background-color:rgba(0,0,0,.1);
+}
+
+.playlist li {
+    position:relative;
+}
+
+.playlist-title {
+    left:50px;
+    overflow:hidden;
+    position:absolute;
+    right:65px;
+    text-overflow:ellipsis;
+    top:0;
+    white-space:nowrap;
+}
+
+.playlist-num {
+    padding-left:21px;
+    width:25px;
+}
+
+.playlist-length {
+    padding-left:21px;
+    position:absolute;
+    right:21px;
+    top:0;
+}
+
+.playlist-wrap {
+    clear:both;
+    padding-top: 0.4em;
+}
+
+
+.playlist-controls {
+    margin-top: 1em;
+    margin-left: 1em;
+    margin-bottom: 0.4em;
+}
+
+.playlist-image {
+
+}
+
+.playlist-image img {
+    width:10em;
+    border: 1px solid #fff;
+    border-radius: 50%;
+    display: block;
+}
+
+/* player */
+
+.audio-progress-bar {
+    background-color: #ccc;
+    width: 100%;
+    height: 1em;
+}
+
+.audio-progress-buffered-indicator {
+    background-color: #eee;
+    width: 0;
+    height: 0.2em;
+    z-index:1;
+}
+
+.audio-progress-bar-indicator {
+    background-color: #51a351;
+    width: 0;
+    height: 1em;
+    z-index:2;
+}
+
+.audio-play, .audio-stop, .audio-toggle {
+    background-color: #d9edf7;
+    text-align: center;
+    width: 4em;
+    cursor: pointer;
+}
+
+.audio-control-toggle {
+    background-color: #eee;
+    padding: 2px;
+}
+
+.audio-control-toggle:hover {
+    background-color: #d7ceac;
+}
+
+
+.audio-toggle:hover {
+    background-color: #d7ceac;
+}
+
+
+
+
+div.track {
+    border: 3px solid #eee;
+}
+
+div.track label {
+    cursor: pointer;
+}
+
+.track-highlight {
+    background-color: #fea;
+}
+
+.userselect-none {
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+
+#audio-button-1 {
+    color: #030303;
+}
+
+
+.button-circle {
+    height: 2em;
+    width: 2em;
+    border-radius: 50%;
+    border: none;
+}
+
+
+@media only screen and (max-width:600px) {
+    span.actions { display:none; }
+    span.track-length { display:block; text-align:center; width:100%; }
+}
+
+
